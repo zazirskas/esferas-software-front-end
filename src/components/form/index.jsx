@@ -74,14 +74,18 @@ export const Form = () => {
 
     const validation = await contactValidationSchema.isValid(contact);
 
+    if (cpf && !validate(cpf)) {
+      setInvalidCpf(true);
+    } else {
+      setInvalidCpf(false);
+    }
+
     if (
       (validation && validate(cpf)) ||
       ((cpf === null || cpf === '') && validation)
     ) {
       console.log('Contato adicionado com sucesso!');
       console.log(contact);
-    } else {
-      setInvalidCpf(true);
     }
   };
 
