@@ -3,19 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chakra-ui/icons": "^1.1.7",
+    "@chakra-ui/pro-theme": "^0.0.47",
     "@chakra-ui/react": "^1.8.8",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
+    "@fontsource/inter": "^4.5.10",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^10.4.9",
     "@testing-library/user-event": "^12.8.3",
+    "axios": "^0.27.2",
     "framer-motion": "^4.1.17",
+    "gerador-validador-cpf": "^5.0.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-icons": "^3.11.0",
+    "react-input-mask": "^2.0.4",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^0.2.4"
+    "web-vitals": "^0.2.4",
+    "yup": "^0.32.11"
   },
   "scripts": {
     "start": "react-scripts start",
