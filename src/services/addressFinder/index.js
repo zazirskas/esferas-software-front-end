@@ -1,10 +1,8 @@
 import axios from 'axios';
+import formatStringDash from '../formatString';
 
 const findAddressUsingCep = cep => {
-  const stringArray = cep.split('');
-  const removeIndex = stringArray.indexOf('-');
-  stringArray.splice(removeIndex, 1);
-  const treatedCep = stringArray.join('');
+  const treatedCep = formatStringDash(cep);
   return axios.get(`https://viacep.com.br/ws/${treatedCep}/json`);
 };
 

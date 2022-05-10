@@ -12,52 +12,77 @@ import {
   VStack,
   StackDivider,
   Text,
-  IconButton,
   FormErrorMessage,
 } from '@chakra-ui/react';
+import formatStringDash from '../../services/formatString';
 import { validate } from 'gerador-validador-cpf';
 import { useNavigate } from 'react-router-dom';
-import { AddIcon } from '@chakra-ui/icons';
 import InputMask from 'react-input-mask';
 import { useEffect, useState } from 'react';
 import findAddressUsingCep from '../../services/addressFinder';
+import { contactValidationSchema } from '../../model/validation/contactValidation';
 
 export const Form = () => {
   const navigate = useNavigate();
 
-  const [name, setName] = useState(null);
-  const [surname, setSurname] = useState(null);
+  const [name, setName] = useState();
+  const [surname, setSurname] = useState();
   const [cpf, setCpf] = useState(null);
   const [email, setEmail] = useState(null);
-  const [telephone, setTelephone] = useState('');
+  const [telephone, setTelephone] = useState(' ');
   const [cep, setCep] = useState('');
-  const [address, setAddress] = useState(null);
-  const [number, setNumber] = useState(null);
-  const [complement, setComplement] = useState(null);
-  const [area, setArea] = useState(null);
-  const [city, setCity] = useState(null);
-  const [state, setState] = useState(null);
+  const [address, setAddress] = useState('');
+  const [number, setNumber] = useState();
+  const [complement, setComplement] = useState('');
+  const [area, setArea] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [invalidName, setInvalidName] = useState(false);
   const [invalidSurname, setInvalidSurname] = useState(false);
   const [invalidCpf, setInvalidCpf] = useState(false);
   const [invalidTelephone, setInvalidTelephone] = useState(false);
   const [invalidCep, setInvalidCep] = useState(false);
+  const [invalidNumber, setInvalidNumber] = useState(false);
+  const [invalidEmail, setInvalidEmail] = useState(false);
 
-  const validateAndSend = fields => {
-    const {
-      name,
-      surname,
-      cpf,
-      email,
-      telephone,
-      cep,
-      address,
-      number,
-      complement,
-      area,
-      city,
-      state,
-    } = fields;
+  const validateAndSend = async contact => {
+    setInvalidCpf(false);
+    setInvalidName(false);
+    setInvalidSurname(false);
+    setInvalidNumber(false);
+    setInvalidEmail(false);
+    setInvalidTelephone(false);
+
+    await contactValidationSchema
+      .validate(contact, { abortEarly: false })
+      .catch(err => {
+        const failedValidationField = err.errors[0];
+        if (failedValidationField === 'name') {
+          setInvalidName(true);
+        } else if (failedValidationField === 'surname') {
+          setInvalidSurname(true);
+        } else if (failedValidationField === 'telephone') {
+          setInvalidTelephone(true);
+        } else if (failedValidationField === 'number') {
+          setInvalidNumber(true);
+        } else if (failedValidationField === 'cep') {
+          setInvalidCep(true);
+        } else if (failedValidationField === 'email') {
+          setInvalidEmail(true);
+        }
+      });
+
+    const validation = await contactValidationSchema.isValid(contact);
+
+    if (
+      (validation && validate(cpf)) ||
+      ((cpf === null || cpf === '') && validation)
+    ) {
+      console.log('Contato adicionado com sucesso!');
+      console.log(contact);
+    } else {
+      setInvalidCpf(true);
+    }
   };
 
   useEffect(() => {
@@ -65,8 +90,13 @@ export const Form = () => {
       findAddressUsingCep(cep)
         .then(response => {
           const { logradouro, bairro, localidade, uf, erro } = response.data;
-          if (erro) {
+          if (erro === 'true') {
+            console.log(response.data);
             setInvalidCep(true);
+            setAddress('');
+            setArea('');
+            setCity('');
+            setState('');
           } else {
             setInvalidCep(false);
             setAddress(logradouro);
@@ -80,6 +110,8 @@ export const Form = () => {
         });
     }
   }, [cep]);
+
+  useEffect(() => {}, [invalidCpf]);
 
   return (
     <Container
@@ -183,7 +215,7 @@ export const Form = () => {
               />
             </Stack>
           </FormControl>
-          <FormControl isInvalid={invalidCpf ? true : false} id="cpf">
+          <FormControl isInvalid={invalidCpf} id="cpf">
             <Stack
               direction={{
                 base: 'column',
@@ -208,7 +240,7 @@ export const Form = () => {
               />
             </Stack>
           </FormControl>
-          <FormControl id="email">
+          <FormControl isInvalid={invalidEmail} id="email">
             <Stack
               direction={{
                 base: 'column',
@@ -221,7 +253,7 @@ export const Form = () => {
               justify="space-between"
             >
               <FormLabel variant="inline">Email</FormLabel>
-              <IconButton aria-label="Add to friends" icon={<AddIcon />} />
+              <FormErrorMessage>Email inválido!</FormErrorMessage>
               <Input
                 onChange={e => setEmail(e.target.value)}
                 type="email"
@@ -230,29 +262,8 @@ export const Form = () => {
                 }}
               />
             </Stack>
-            <VStack
-              direction={{
-                base: 'column',
-                md: 'row',
-              }}
-              spacing={{
-                base: '3',
-              }}
-              align="flex-end"
-              justify="space-evenly"
-              marginTop={3}
-            >
-              <Input
-                onChange={e => setEmail(e.target.value)}
-                type="email"
-                maxW={{
-                  md: '3xl',
-                }}
-              />
-            </VStack>
           </FormControl>
           <FormControl isRequired isInvalid={invalidTelephone} id="telephone">
-            <FormErrorMessage>Telefone inválido</FormErrorMessage>
             <Stack
               direction={{
                 base: 'column',
@@ -265,12 +276,12 @@ export const Form = () => {
               justify="space-between"
             >
               <FormLabel variant="inline">Telefone</FormLabel>
-              <IconButton aria-label="Add to friends" icon={<AddIcon />} />
+              <FormErrorMessage>Telefone inválido</FormErrorMessage>
               <Input
-                onChange={e => setTelephone(e.target.value)}
+                onChange={e => setTelephone(formatStringDash(e.target.value))}
                 as={InputMask}
                 mask={
-                  telephone.length === 14 ? '(99)99999-9999' : '(99)9999-99999'
+                  telephone.length === 13 ? '(99)99999-9999' : '(99)9999-99999'
                 }
                 maskChar={null}
                 placeholder="DDD + Telefone"
@@ -280,26 +291,6 @@ export const Form = () => {
                 }}
               />
             </Stack>
-            <VStack
-              direction={{
-                base: 'column',
-                md: 'row',
-              }}
-              spacing={{
-                base: '3',
-              }}
-              align="flex-end"
-              justify="space-evenly"
-              marginTop={3}
-            >
-              <Input
-                onChange={e => setTelephone(e.target.value)}
-                type="tel"
-                maxW={{
-                  md: '3xl',
-                }}
-              />
-            </VStack>
           </FormControl>
           <FormControl isRequired isInvalid={invalidCep} id="cep">
             <Stack
@@ -351,7 +342,7 @@ export const Form = () => {
           </FormControl>
           <FormControl
             isRequired
-            isInvalid={number === '' ? true : false}
+            isInvalid={number === '' || invalidNumber ? true : false}
             id="number"
           >
             <Stack
@@ -368,6 +359,7 @@ export const Form = () => {
               <FormLabel variant="inline">Número</FormLabel>
               <FormErrorMessage>Número inválido</FormErrorMessage>
               <Input
+                type={'text'}
                 onChange={e => setNumber(e.target.value)}
                 maxW={{
                   md: '3xl',
@@ -465,9 +457,28 @@ export const Form = () => {
               />
             </Stack>
           </FormControl>
-
           <Flex direction="row-reverse">
-            <Button variant="primary">Adicionar</Button>
+            <Button
+              onClick={() =>
+                validateAndSend({
+                  name,
+                  surname,
+                  cpf,
+                  email,
+                  telephone,
+                  cep,
+                  address,
+                  number,
+                  complement,
+                  area,
+                  city,
+                  state,
+                })
+              }
+              variant="primary"
+            >
+              Adicionar
+            </Button>
           </Flex>
         </Stack>
       </Stack>
