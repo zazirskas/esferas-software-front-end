@@ -1,19 +1,19 @@
 import React from 'react';
 import { ChakraProvider, Box, Grid, extendTheme } from '@chakra-ui/react';
-import { theme } from '@chakra-ui/pro-theme'
-import '@fontsource/inter/variable.css'
+import { theme } from '@chakra-ui/pro-theme';
+import '@fontsource/inter/variable.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ColorModeSwitcher } from './ColorModeSwitcher';
 import { Hero } from './components/hero';
 import { Form } from './components/form';
+import { Table } from './components/table';
 
 function App() {
-
   const myTheme = extendTheme(
     {
       colors: { ...theme.colors, brand: theme.colors.blue },
     },
-    theme,
+    theme
   );
 
   return (
@@ -33,9 +33,17 @@ function App() {
             <Route
               path="/new-contact"
               element={
-              <Box textAlign="center" fontSize="xl">
-                <Form />
-              </Box>
+                <Box textAlign="center" fontSize="xl">
+                  <Form />
+                </Box>
+              }
+            />
+            <Route
+              path="/contacts"
+              element={
+                <Box textAlign="center" fontSize="xl">
+                  <Table />
+                </Box>
               }
             />
           </Routes>
