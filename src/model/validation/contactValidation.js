@@ -5,7 +5,7 @@ export const contactValidationSchema = yup.object().shape({
   surname: yup.string('surname').required('surname'),
   cpf: yup.string().nullable(),
   email: yup.string().nullable().email('email'),
-  telephone: yup.string().min(12, 'telephone').max(13),
+  telephone: yup.string().min(12, 'telephone').max(13,'telephone'),
   cep: yup.string().required('cep').min(9, 'cep'),
   address: yup.string().required('cep').nullable(),
   number: yup.string().required('number'),

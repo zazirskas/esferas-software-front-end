@@ -6,7 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ColorModeSwitcher } from './ColorModeSwitcher';
 import { Hero } from './components/hero';
 import { Form } from './components/form';
-import { Table } from './components/table';
+import Table from './components/table';
 
 function App() {
   const myTheme = extendTheme(
@@ -34,7 +34,7 @@ function App() {
               path="/new-contact"
               element={
                 <Box textAlign="center" fontSize="xl">
-                  <Form />
+                  <Form title={"Adicionar Contato"} subtitle={"Insiras as informações do novo contato"} action={"Adicionar"} method="post"/>
                 </Box>
               }
             />
@@ -43,6 +43,14 @@ function App() {
               element={
                 <Box textAlign="center" fontSize="xl">
                   <Table />
+                </Box>
+              }
+            />
+            <Route
+              path="/edit/:id"
+              element={
+                <Box textAlign="center" fontSize="xl">
+                  <Form title={"Editar Contato"} subtitle={"Edite as informações do contato"} action={"Editar"} method="put"/>
                 </Box>
               }
             />

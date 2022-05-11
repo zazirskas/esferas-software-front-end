@@ -16,13 +16,15 @@ import {
 } from '@chakra-ui/react';
 import formatStringDash from '../../services/formatString';
 import { validate } from 'gerador-validador-cpf';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import InputMask from 'react-input-mask';
 import { useEffect, useState } from 'react';
 import findAddressUsingCep from '../../services/addressFinder';
 import { contactValidationSchema } from '../../model/validation/contactValidation';
+import axios from 'axios';
 
-export const Form = () => {
+export const Form = props => {
+  const params = useParams();
   const navigate = useNavigate();
 
   const [name, setName] = useState();
@@ -44,8 +46,11 @@ export const Form = () => {
   const [invalidCep, setInvalidCep] = useState(false);
   const [invalidNumber, setInvalidNumber] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState(false);
+  const [sentContact, setSentContact] = useState(false);
+  const [mask, setMask] = useState('(99)99999-9999');
 
   const validateAndSend = async contact => {
+    setSentContact(false);
     setInvalidCpf(false);
     setInvalidName(false);
     setInvalidSurname(false);
@@ -57,6 +62,7 @@ export const Form = () => {
       .validate(contact, { abortEarly: false })
       .catch(err => {
         const failedValidationField = err.errors[0];
+        console.log(failedValidationField);
         if (failedValidationField === 'name') {
           setInvalidName(true);
         } else if (failedValidationField === 'surname') {
@@ -72,6 +78,9 @@ export const Form = () => {
         }
       });
 
+    if (telephone.includes('_')) {
+      setInvalidTelephone(true);
+    }
     const validation = await contactValidationSchema.isValid(contact);
 
     if (cpf && !validate(cpf)) {
@@ -81,11 +90,57 @@ export const Form = () => {
     }
 
     if (
-      (validation && validate(cpf)) ||
-      ((cpf === null || cpf === '') && validation)
+      (validation && validate(cpf) && !telephone.includes('_')) ||
+      ((cpf === null || cpf === '') && validation && !telephone.includes('_'))
     ) {
-      console.log('Contato adicionado com sucesso!');
-      console.log(contact);
+      if (props.method === 'post') {
+        await axios.post('http://localhost:3000/contacts', {
+          name: name,
+          surname: surname,
+          cpf: cpf,
+          email: email,
+          telephone: telephone,
+          cep: cep,
+          address: address,
+          number: number,
+          complement: complement,
+          area: area,
+          city: city,
+          state: state,
+        });
+        setSentContact(true);
+        setName();
+        setSurname();
+        setCpf(null);
+        setEmail(null);
+        setTelephone(' ');
+        setCep('');
+        setAddress('');
+        setNumber();
+        setComplement('');
+        setArea('');
+        setCity('');
+        setState('');
+        navigate('/contacts');
+      } else if (props.method === 'put') {
+        console.log(telephone.includes('_'));
+        await axios.put(`http://localhost:3000/contacts/${params.id}`, {
+          name: name,
+          surname: surname,
+          cpf: cpf,
+          email: email,
+          telephone: telephone,
+          cep: cep,
+          address: address,
+          number: number,
+          complement: complement,
+          area: area,
+          city: city,
+          state: state,
+        });
+
+        navigate('/contacts');
+      }
     }
   };
 
@@ -115,7 +170,32 @@ export const Form = () => {
     }
   }, [cep]);
 
-  useEffect(() => {}, [invalidCpf]);
+  useEffect(() => {
+    if (props.method === 'put') {
+      axios
+        .get(`http://localhost:3000/contacts/${params.id}`)
+        .then(response => {
+          setName(response.data[0].name);
+          setSurname(response.data[0].surname);
+          setCpf(response.data[0].cpf);
+          setEmail(response.data[0].email);
+          setTelephone(response.data[0].telephone);
+          setCep(response.data[0].cep);
+          setAddress(response.data[0].address);
+          setNumber(response.data[0].number);
+          setComplement(response.data[0].complement);
+          setArea(response.data[0].area);
+          setCity(response.data[0].city);
+          setState(response.data[0].state);
+          if (response.data[0].telephone.length === 12)
+            setMask('(99)9999-9999');
+        });
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  console.log(telephone.length);
 
   return (
     <Container
@@ -136,10 +216,10 @@ export const Form = () => {
           <Box>
             <VStack justify="center" align="flex-start">
               <Text fontSize="lg" fontWeight="medium" textAlign="left">
-                Novo contato
+                {props.title}
               </Text>
               <Text color="muted" fontSize="sm" textAlign="left">
-                Insira as informações do novo contato
+                {props.subtitle}
               </Text>
             </VStack>
           </Box>
@@ -186,6 +266,7 @@ export const Form = () => {
               <FormLabel variant="inline">Nome</FormLabel>
               <FormErrorMessage>Nome inválido</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? name : undefined}
                 onChange={e => setName(e.target.value)}
                 maxW={{
                   md: '3xl',
@@ -212,6 +293,7 @@ export const Form = () => {
               <FormLabel variant="inline">Sobrenome</FormLabel>
               <FormErrorMessage>Sobrenome inválido</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? surname : undefined}
                 onChange={e => setSurname(e.target.value)}
                 maxW={{
                   md: '3xl',
@@ -234,6 +316,7 @@ export const Form = () => {
               <FormLabel variant="inline">CPF</FormLabel>
               <FormErrorMessage>CPF Inválido!</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? cpf : undefined}
                 onChange={e => setCpf(e.target.value)}
                 type="inline"
                 as={InputMask}
@@ -259,6 +342,7 @@ export const Form = () => {
               <FormLabel variant="inline">Email</FormLabel>
               <FormErrorMessage>Email inválido!</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? email : undefined}
                 onChange={e => setEmail(e.target.value)}
                 type="email"
                 maxW={{
@@ -282,12 +366,16 @@ export const Form = () => {
               <FormLabel variant="inline">Telefone</FormLabel>
               <FormErrorMessage>Telefone inválido</FormErrorMessage>
               <Input
+                value={telephone}
                 onChange={e => setTelephone(formatStringDash(e.target.value))}
-                as={InputMask}
-                mask={
-                  telephone.length === 13 ? '(99)99999-9999' : '(99)9999-99999'
+                onFocus={e => setMask('(99)99999-9999')}
+                onBlur={e =>
+                  telephone.length === 12
+                    ? setMask('(99)9999-9999')
+                    : setMask('(99)99999-9999')
                 }
-                maskChar={null}
+                as={InputMask}
+                mask={mask}
                 placeholder="DDD + Telefone"
                 type="tel"
                 maxW={{
@@ -311,6 +399,7 @@ export const Form = () => {
               <FormLabel variant="inline">CEP</FormLabel>
               <FormErrorMessage>CEP Inválido!</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? cep : undefined}
                 as={InputMask}
                 mask="99999-999"
                 maskChar={null}
@@ -363,6 +452,7 @@ export const Form = () => {
               <FormLabel variant="inline">Número</FormLabel>
               <FormErrorMessage>Número inválido</FormErrorMessage>
               <Input
+                value={props.method === 'put' ? number : undefined}
                 type={'text'}
                 onChange={e => setNumber(e.target.value)}
                 maxW={{
@@ -385,6 +475,7 @@ export const Form = () => {
             >
               <FormLabel variant="inline">Complemento</FormLabel>
               <Input
+                value={props.method === 'put' ? complement : undefined}
                 onChange={e => setComplement(e.target.value)}
                 maxW={{
                   md: '3xl',
@@ -461,6 +552,9 @@ export const Form = () => {
               />
             </Stack>
           </FormControl>
+          {sentContact && (
+            <Text color="green.400">Contato adicionado com sucesso!</Text>
+          )}
           <Flex direction="row-reverse">
             <Button
               onClick={() =>
@@ -481,7 +575,7 @@ export const Form = () => {
               }
               variant="primary"
             >
-              Adicionar
+              {props.action}
             </Button>
           </Flex>
         </Stack>
