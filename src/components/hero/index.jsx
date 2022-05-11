@@ -6,8 +6,12 @@ import {
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
+import { useNavigate } from "react-router-dom"
 
 export const Hero = () => {
+
+  const navigate = useNavigate();
+
   return (
     <Box as="section">
       <Box
@@ -24,7 +28,7 @@ export const Hero = () => {
           letterSpacing="tight"
           lineHeight="1.2"
         >
-          Bem-vindo ao sistema de cadastro de contatos da{' '}
+          Bem-vindo ao sistema de contatos da{' '}
           <Box
             as="mark"
             bg="unset"
@@ -48,8 +52,8 @@ export const Hero = () => {
         >
           <Button
             as="a"
-            href="#"
             size="lg"
+            onClick={() => navigate('new-contact')}
             h="16"
             px="10"
             colorScheme="blue"
@@ -62,7 +66,7 @@ export const Hero = () => {
             as="a"
             flex={{ md: '1' }}
             variant="outline"
-            href="#"
+            onClick={() => navigate("contacts")}
             size="lg"
             h="16"
             px="10"
