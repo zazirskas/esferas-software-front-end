@@ -62,7 +62,6 @@ export const Form = props => {
       .validate(contact, { abortEarly: false })
       .catch(err => {
         const failedValidationField = err.errors[0];
-        console.log(failedValidationField);
         if (failedValidationField === 'name') {
           setInvalidName(true);
         } else if (failedValidationField === 'surname') {
@@ -123,7 +122,6 @@ export const Form = props => {
         setState('');
         navigate('/contacts');
       } else if (props.method === 'put') {
-        console.log(telephone.includes('_'));
         await axios.put(`http://localhost:3000/contacts/${params.id}`, {
           name: name,
           surname: surname,
@@ -150,7 +148,6 @@ export const Form = props => {
         .then(response => {
           const { logradouro, bairro, localidade, uf, erro } = response.data;
           if (erro === 'true') {
-            console.log(response.data);
             setInvalidCep(true);
             setAddress('');
             setArea('');
@@ -194,8 +191,6 @@ export const Form = props => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  console.log(telephone.length);
 
   return (
     <Container
